@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ADHD每日打卡Bingo</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+        }
+        
+        body {
+            background-color: #f0f9ff;
+            color: #333;
+            line-height: 1.6;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: linear-gradient(135deg, #a5d8ff 0%, #4dabf7 100%);
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            color: white;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.2);
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+        
+        .stats-container {
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            margin: 25px 0;
+            gap: 15px;
+        }
+        
+        .stat-box {
+            background-color: white;
+            border-radius: 10px;
+            padding: 15px 25px;
+            text-align: center;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
+            flex: 1;
+            min-width: 180px;
+        }
+        
+        .stat-number {
+            font-size: 2.2rem;
+            font-weight: bold;
+            color: #339af0;
+        }
+        
+        .stat-label {
+            font-size: 1rem;
+            color: #666;
+            margin-top: 5px;
+        }
+        
+        .bingo-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 30px 0;
+        }
+        
+        .bingo-board {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 8px;
+            max-width: 600px;
+            width: 100%;
+            margin: 0 auto;
+        }
+        
+        .bingo-cell {
+            aspect-ratio: 1;
+            background-color: white;
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 10px;
+            text-align: center;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+            transition: all 0.3s ease;
+            border: 3px solid transparent;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .bingo-cell:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 12px rgba(0, 0, 0, 0.12);
+        }
+        
+        .bingo-cell.completed {
+            background-color: #d0ebff;
+            border-color: #339af0;
+        }
+        
+        .bingo-cell.completed .cell-icon {
+            color: #339af0;
+        }
+        
+        .bingo-cell.completed::after {
+            content: "✓";
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            color: #339af0;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+        
+        .cell-icon {
+            font-size: 1.8rem;
+            margin-bottom: 8px;
+            color: #74c0fc;
+        }
+        
+        .cell-text {
+            font-size: 0.9rem;
+            font-weight: 600;
+            line-height: 1.2;
+        }
+        
+        .bingo-row {
+            display: contents;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 30px;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .btn-primary {
+            background-color: #339af0;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: #228be6;
+            transform: translateY(-3px);
+        }
+        
+        .btn-secondary {
+            background-color: #ff922b;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #fd7e14;
+            transform: translateY(-3px);
+        }
+        
+        .bingo-line {
+            position: absolute;
+            background-color: #ff6b6b;
+            z-index: 10;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+        
+        .bingo-line.show {
+            opacity: 0.7;
+        }
+        
+        .bingo-message {
+            text-align: center;
+            margin-top: 25px;
+            padding: 15px;
+            background-color: #fff3bf;
+            border-radius: 10px;
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: #e67700;
+            opacity: 0;
+            transform: translateY(-10px);
+            transition: all 0.5s ease;
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .bingo-message.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        .task-list {
+            background-color: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-top: 40px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+        }
+        
+        .task-list h2 {
+            color: #339af0;
+            margin-bottom: 20px;
+            text-align: center;
+            font-size: 1.8rem;
+        }
+        
+        .tasks {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 15px;
+        }
+        
+        .task-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 15px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #74c0fc;
+        }
+        
+        .task-item.completed {
+            background-color: #e7f5ff;
+            border-left-color: #339af0;
+        }
+        
+        .task-checkbox {
+            margin-right: 12px;
+            width: 20px;
+            height: 20px;
+            accent-color: #339af0;
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 20px;
+            color: #666;
+            border-top: 1px solid #ddd;
+            font-size: 0.9rem;
+        }
+        
+        @media (max-width: 768px) {
+            .bingo-board {
+                gap: 6px;
+            }
+            
+            .cell-text {
+                font-size: 0.8rem;
+            }
+            
+            .cell-icon {
+                font-size: 1.5rem;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .stat-box {
+                min-width: 140px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .bingo-board {
+                grid-template-columns: repeat(3, 1fr);
+            }
+            
+            .controls {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .btn {
+                width: 80%;
+                justify-content: center;
+            }
+            
+            .tasks {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>ADHD每日打卡Bingo</h1>
+            <p class="subtitle">完成每日任务，达成Bingo连线！让日常管理变得有趣</p>
+        </header>
+        
+        <div class="stats-container">
+            <div class="stat-box">
+                <div class="stat-number" id="completed-count">0</div>
+                <div class="stat-label">今日已完成</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-number" id="total-count">25</div>
+                <div class="stat-label">总任务数</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-number" id="bingo-count">0</div>
+                <div class="stat-label">Bingo连线</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-number" id="progress-percent">0%</div>
+                <div class="stat-label">完成进度</div>
+            </div>
+        </div>
+        
+        <div class="bingo-container">
+            <div class="bingo-board" id="bingo-board">
+                <!-- Bingo格子将通过JavaScript动态生成 -->
+            </div>
+            
+            <div class="bingo-message" id="bingo-message">
+                恭喜！您完成了一条Bingo连线！
+            </div>
+        </div>
+        
+        <div class="controls">
+            <button class="btn btn-primary" id="reset-btn">
+                <i class="fas fa-redo-alt"></i> 重置今日打卡
+            </button>
+            <button class="btn btn-secondary" id="random-btn">
+                <i class="fas fa-random"></i> 随机完成一项
+            </button>
+        </div>
+        
+        <div class="task-list">
+            <h2>今日任务清单</h2>
+            <div class="tasks" id="task-list">
+                <!-- 任务清单将通过JavaScript动态生成 -->
+            </div>
+        </div>
+        
+        <footer>
+            <p>ADHD生存Bingo | 每天进步一点点，积极面对生活！</p>
+            <p>数据保存在浏览器本地，请勿清除浏览器数据</p>
+        </footer>
+    </div>
+
+    <script>
+        // 任务数据 - 基于您提供的图片内容
+        const tasks = [
+            { id: 1, text: "吃了至少两顿饭", icon: "fas fa-utensils", completed: false },
+            { id: 2, text: "把东西放回原位", icon: "fas fa-laptop", completed: false },
+            { id: 3, text: "洗脸两次", icon: "fas fa-hands-wash", completed: false },
+            { id: 4, text: "出门", icon: "fas fa-walking", completed: false },
+            { id: 5, text: "护肤两次", icon: "fas fa-spa", completed: false },
+            { id: 6, text: "一点点积极", icon: "fas fa-smile", completed: false },
+            { id: 7, text: "说起床就起床", icon: "fas fa-bed", completed: false },
+            { id: 8, text: "打游戏", icon: "fas fa-gamepad", completed: false },
+            { id: 9, text: "称赞自己", icon: "fas fa-heart", completed: false },
+            { id: 10, text: "刷牙两次", icon: "fas fa-tooth", completed: false },
+            { id: 11, text: "没喝冷饮", icon: "fas fa-wine-glass", completed: false },
+            { id: 12, text: "洗碗", icon: "fas fa-concierge-bell", completed: false },
+            { id: 13, text: "扔垃圾", icon: "fas fa-trash-alt", completed: false },
+            { id: 14, text: "洗澡", icon: "fas fa-bath", completed: false },
+            { id: 15, text: "记录三件幸福小事", icon: "fas fa-book", completed: false },
+            { id: 16, text: "吃至少一种补剂/药", icon: "fas fa-pills", completed: false },
+            { id: 17, text: "学习", icon: "fas fa-book-reader", completed: false },
+            { id: 18, text: "喝了至少一杯水", icon: "fas fa-tint", completed: false },
+            { id: 19, text: "没久坐超过2h", icon: "fas fa-chair", completed: false },
+            { id: 20, text: "和人/AI聊天", icon: "fas fa-comments", completed: false },
+            { id: 21, text: "有意识地少刷短视频", icon: "fas fa-mobile-alt", completed: false },
+            { id: 22, text: "简单地运动", icon: "fas fa-running", completed: false },
+            { id: 23, text: "听播客", icon: "fas fa-podcast", completed: false },
+            { id: 24, text: "看书", icon: "fas fa-book-open", completed: false },
+            { id: 25, text: "进行一项兴趣爱好", icon: "fas fa-paint-brush", completed: false }
+        ];
+
+        // Bingo相关变量
+        let completedTasks = 0;
+        let bingoLines = 0;
+        const bingoSize = 5;
+        let bingoBoard = [];
+        let completedLines = [];
+        
+        // 初始化Bingo板
+        function initBingoBoard() {
+            const bingoBoardElement = document.getElementById('bingo-board');
+            bingoBoardElement.innerHTML = '';
+            bingoBoard = [];
+            completedLines = [];
+            
+            // 打乱任务顺序并选择前25个
+            const shuffledTasks = [...tasks].sort(() => Math.random() - 0.5);
+            
+            // 创建Bingo格子
+            for (let row = 0; row < bingoSize; row++) {
+                bingoBoard[row] = [];
+                
+                for (let col = 0; col < bingoSize; col++) {
+                    const taskIndex = row * bingoSize + col;
+                    const task = shuffledTasks[taskIndex];
+                    bingoBoard[row][col] = {
+                        id: task.id,
+                        completed: task.completed,
+                        element: null
+                    };
+                    
+                    const cell = document.createElement('div');
+                    cell.className = 'bingo-cell';
+                    cell.dataset.row = row;
+                    cell.dataset.col = col;
+                    
+                    cell.innerHTML = `
+                        <div class="cell-icon"><i class="${task.icon}"></i></div>
+                        <div class="cell-text">${task.text}</div>
+                    `;
+                    
+                    cell.addEventListener('click', () => toggleTask(task.id));
+                    
+                    bingoBoardElement.appendChild(cell);
+                    bingoBoard[row][col].element = cell;
+                }
+            }
+            
+            // 更新统计数据
+            updateStats();
+        }
+        
+        // 初始化任务清单
+        function initTaskList() {
+            const taskListElement = document.getElementById('task-list');
+            taskListElement.innerHTML = '';
+            
+            tasks.forEach(task => {
+                const taskItem = document.createElement('div');
+                taskItem.className = `task-item ${task.completed ? 'completed' : ''}`;
+                taskItem.id = `task-${task.id}`;
+                
+                taskItem.innerHTML = `
+                    <input type="checkbox" class="task-checkbox" id="checkbox-${task.id}" ${task.completed ? 'checked' : ''}>
+                    <label for="checkbox-${task.id}">${task.text}</label>
+                `;
+                
+                const checkbox = taskItem.querySelector('.task-checkbox');
+                checkbox.addEventListener('change', () => toggleTask(task.id));
+                
+                taskListElement.appendChild(taskItem);
+            });
+        }
+        
+        // 切换任务完成状态
+        function toggleTask(taskId) {
+            // 更新任务数据
+            const taskIndex = tasks.findIndex(task => task.id === taskId);
+            if (taskIndex === -1) return;
+            
+            tasks[taskIndex].completed = !tasks[taskIndex].completed;
+            
+            // 更新Bingo板
+            for (let row = 0; row < bingoSize; row++) {
+                for (let col = 0; col < bingoSize; col++) {
+                    if (bingoBoard[row][col].id === taskId) {
+                        bingoBoard[row][col].completed = tasks[taskIndex].completed;
+                        
+                        if (tasks[taskIndex].completed) {
+                            bingoBoard[row][col].element.classList.add('completed');
+                        } else {
+                            bingoBoard[row][col].element.classList.remove('completed');
+                        }
+                        break;
+                    }
+                }
+            }
+            
+            // 更新任务清单
+            const taskItem = document.getElementById(`task-${taskId}`);
+            const checkbox = document.getElementById(`checkbox-${taskId}`);
+            
+            if (tasks[taskIndex].completed) {
+                taskItem.classList.add('completed');
+                checkbox.checked = true;
+            } else {
+                taskItem.classList.remove('completed');
+                checkbox.checked = false;
+            }
+            
+            // 检查Bingo连线
+            checkBingoLines();
+            
+            // 更新统计数据
+            updateStats();
+            
+            // 保存到本地存储
+            saveToLocalStorage();
+        }
+        
+        // 检查Bingo连线
+        function checkBingoLines() {
+            const lines = [];
+            
+            // 检查行
+            for (let row = 0; row < bingoSize; row++) {
+                let complete = true;
+                for (let col = 0; col < bingoSize; col++) {
+                    if (!bingoBoard[row][col].completed) {
+                        complete = false;
+                        break;
+                    }
+                }
+                if (complete) lines.push({type: 'row', index: row});
+            }
+            
+            // 检查列
+            for (let col = 0; col < bingoSize; col++) {
+                let complete = true;
+                for (let row = 0; row < bingoSize; row++) {
+                    if (!bingoBoard[row][col].completed) {
+                        complete = false;
+                        break;
+                    }
+                }
+                if (complete) lines.push({type: 'col', index: col});
+            }
+            
+            // 检查对角线（左上到右下）
+            let diagonal1Complete = true;
+            for (let i = 0; i < bingoSize; i++) {
+                if (!bingoBoard[i][i].completed) {
+                    diagonal1Complete = false;
+                    break;
+                }
+            }
+            if (diagonal1Complete) lines.push({type: 'diagonal', index: 1});
+            
+            // 检查对角线（右上到左下）
+            let diagonal2Complete = true;
+            for (let i = 0; i < bingoSize; i++) {
+                if (!bingoBoard[i][bingoSize - 1 - i].completed) {
+                    diagonal2Complete = false;
+                    break;
+                }
+            }
+            if (diagonal2Complete) lines.push({type: 'diagonal', index: 2});
+            
+            // 移除旧的连线效果，添加新的
+            removeBingoLines();
+            
+            // 添加新的连线效果
+            lines.forEach(line => {
+                if (!completedLines.some(l => l.type === line.type && l.index === line.index)) {
+                    completedLines.push(line);
+                    drawBingoLine(line);
+                }
+            });
+            
+            // 更新Bingo数量
+            bingoLines = completedLines.length;
+            
+            // 显示Bingo消息
+            const bingoMessage = document.getElementById('bingo-message');
+            if (bingoLines > 0) {
+                bingoMessage.textContent = `恭喜！您完成了${bingoLines}条Bingo连线！`;
+                bingoMessage.classList.add('show');
+                
+                // 3秒后隐藏消息
+                setTimeout(() => {
+                    bingoMessage.classList.remove('show');
+                }, 3000);
+            }
+        }
+        
+        // 绘制Bingo连线
+        function drawBingoLine(line) {
+            const board = document.getElementById('bingo-board');
+            const boardRect = board.getBoundingClientRect();
+            const cellSize = boardRect.width / bingoSize;
+            
+            const lineElement = document.createElement('div');
+            lineElement.className = 'bingo-line';
+            
+            if (line.type === 'row') {
+                lineElement.style.width = `${boardRect.width}px`;
+                lineElement.style.height = '8px';
+                lineElement.style.top = `${cellSize * line.index + cellSize/2 - 4}px`;
+                lineElement.style.left = '0';
+            } else if (line.type === 'col') {
+                lineElement.style.width = '8px';
+                lineElement.style.height = `${boardRect.height}px`;
+                lineElement.style.left = `${cellSize * line.index + cellSize/2 - 4}px`;
+                lineElement.style.top = '0';
+            } else if (line.type === 'diagonal' && line.index === 1) {
+                lineElement.style.width = `${Math.sqrt(2) * boardRect.width}px`;
+                lineElement.style.height = '8px';
+                lineElement.style.top = `${boardRect.height/2 - 4}px`;
+                lineElement.style.left = '0';
+                lineElement.style.transform = 'rotate(45deg)';
+                lineElement.style.transformOrigin = 'top left';
+            } else if (line.type === 'diagonal' && line.index === 2) {
+                lineElement.style.width = `${Math.sqrt(2) * boardRect.width}px`;
+                lineElement.style.height = '8px';
+                lineElement.style.top = `${boardRect.height/2 - 4}px`;
+                lineElement.style.right = '0';
+                lineElement.style.left = 'auto';
+                lineElement.style.transform = 'rotate(-45deg)';
+                lineElement.style.transformOrigin = 'top right';
+            }
+            
+            board.appendChild(lineElement);
+            
+            // 触发动画
+            setTimeout(() => {
+                lineElement.classList.add('show');
+            }, 10);
+        }
+        
+        // 移除所有Bingo连线
+        function removeBingoLines() {
+            const lines = document.querySelectorAll('.bingo-line');
+            lines.forEach(line => line.remove());
+        }
+        
+        // 更新统计数据
+        function updateStats() {
+            completedTasks = tasks.filter(task => task.completed).length;
+            const progressPercent = Math.round((completedTasks / tasks.length) * 100);
+            
+            document.getElementById('completed-count').textContent = completedTasks;
+            document.getElementById('bingo-count').textContent = bingoLines;
+            document.getElementById('progress-percent').textContent = `${progressPercent}%`;
+        }
+        
+        // 重置所有任务
+        function resetAllTasks() {
+            if (confirm("确定要重置今日的所有打卡记录吗？")) {
+                tasks.forEach(task => {
+                    task.completed = false;
+                });
+                
+                initBingoBoard();
+                initTaskList();
+                removeBingoLines();
+                completedLines = [];
+                bingoLines = 0;
+                
+                // 保存到本地存储
+                saveToLocalStorage();
+                
+                // 隐藏Bingo消息
+                document.getElementById('bingo-message').classList.remove('show');
+            }
+        }
+        
+        // 随机完成一项任务
+        function completeRandomTask() {
+            const incompleteTasks = tasks.filter(task => !task.completed);
+            
+            if (incompleteTasks.length === 0) {
+                alert("所有任务都已经完成了！");
+                return;
+            }
+            
+            const randomIndex = Math.floor(Math.random() * incompleteTasks.length);
+            const randomTask = incompleteTasks[randomIndex];
+            
+            toggleTask(randomTask.id);
+        }
+        
+        // 保存到本地存储
+        function saveToLocalStorage() {
+            const today = new Date().toDateString();
+            const data = {
+                date: today,
+                tasks: tasks.map(task => ({id: task.id, completed: task.completed}))
+            };
+            
+            localStorage.setItem('adhdBingoData', JSON.stringify(data));
+        }
+        
+        // 从本地存储加载
+        function loadFromLocalStorage() {
+            const data = localStorage.getItem('adhdBingoData');
+            
+            if (data) {
+                const parsedData = JSON.parse(data);
+                const today = new Date().toDateString();
+                
+                // 如果保存的数据是今天的，则加载
+                if (parsedData.date === today) {
+                    parsedData.tasks.forEach(savedTask => {
+                        const taskIndex = tasks.findIndex(task => task.id === savedTask.id);
+                        if (taskIndex !== -1) {
+                            tasks[taskIndex].completed = savedTask.completed;
+                        }
+                    });
+                }
+            }
+        }
+        
+        // 初始化页面
+        function initPage() {
+            // 从本地存储加载数据
+            loadFromLocalStorage();
+            
+            // 初始化Bingo板和任务清单
+            initBingoBoard();
+            initTaskList();
+            
+            // 检查初始的Bingo连线
+            checkBingoLines();
+            
+            // 添加按钮事件监听
+            document.getElementById('reset-btn').addEventListener('click', resetAllTasks);
+            document.getElementById('random-btn').addEventListener('click', completeRandomTask);
+            
+            // 添加键盘快捷键支持
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'r' || e.key === 'R') {
+                    resetAllTasks();
+                } else if (e.key === ' ') {
+                    e.preventDefault();
+                    completeRandomTask();
+                }
+            });
+        }
+        
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', initPage);
+    </script>
+</body>
+</html>
